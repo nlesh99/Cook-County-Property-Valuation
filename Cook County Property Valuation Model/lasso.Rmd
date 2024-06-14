@@ -1,0 +1,148 @@
+```{r}
+history <- read.csv("C:/Files/Finance in python/Project/New/data/historic_property_data.csv")
+head(history)
+codebook <- read.csv("data/codebook.csv")
+head(codebook)
+predict <- read.csv("data/predict_property_data.csv")
+head(predict)
+
+df <- history
+
+```
+```{r}
+
+
+df[is.na(df)] <- "null"
+
+df[] <- lapply(df, as.character)
+
+head(df)
+ 
+
+```
+
+```{r}
+library(boot)
+library(glmnet)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+```
+
+```{r}
+
+
+
+  
+x <- model.matrix(sale_price ~0+
+                    
+meta_town_code+
+meta_nbhd+
+char_hd_sf+
+char_age+
+as.factor(char_apts)+
+as.factor(char_ext_wall)+
+as.factor(char_roof_cnst)+
+char_rooms+
+char_beds+
+as.factor(char_bsmt)+
+as.factor(char_bsmt_fin)+
+as.factor(char_heat)+
+as.factor(char_oheat)+
+as.factor(char_air)+
+as.factor(char_frpl)+
+as.factor(char_attic_type)+
+char_fbath+
+char_hbath+
+as.factor(char_tp_plan)+
+as.factor(char_tp_dsgn)+
+as.factor(char_gar1_size)+
+as.factor(char_gar1_cnst)+
+as.factor(char_gar1_att)+
+as.factor(char_gar1_area)+
+char_bldg_sf+
+as.factor(char_use)+
+as.factor(char_type_resd)+
+as.factor(char_attic_fnsh)+
+as.factor(char_porch)+
+as.factor(geo_ohare_noise)+
+as.factor(geo_floodplain)+
+as.factor(geo_fs_flood_factor)+
+as.factor(geo_fs_flood_risk_direction)+
+as.factor(geo_withinmr100)+
+as.factor(geo_withinmr101300)+
+as.factor(geo_school_elem_district)+
+as.factor(geo_school_hs_district)+
+as.factor(econ_tax_rate)+
+#as.factor(econ_midincome)+
+as.factor(ind_garage)
+
+, data = df)
+  
+ 
+
+
+# first six rows of x
+#head(x, 6)
+
+
+
+```
+
+
+```{r}
+y <- df$sale_price
+
+
+```
+
+
+```{r}
+ nrow(x)
+ nrow(y)
+```
+
+
+```{r}
+
+
+
+# Display the sequence of lambda values 
+# fit$lambda
+
+ 
+
+   fit <- cv.glmnet(x, y)
+  
+
+
+```
+
+```{r}
+lambda.small <- min(fit$lambda)
+lambda.best <- fit$lambda.min
+lambda.large <- max(fit$lambda)
+```
+
+
+```{r}
+betas=as.matrix(fit$glmnet.fit$beta)
+lambdas = fit$lambda
+names(lambdas) = colnames(betas)
+
+
+ as.data.frame(betas) %>% 
+  tibble::rownames_to_column("variable") %>% 
+  pivot_longer(-variable) %>% 
+  mutate(lambda=lambdas[name])%>% 
+  ggplot(aes(x=lambda,y=value,col=variable)) + 
+  geom_line() + 
+  scale_x_log10()
+```
+```{r}
+coef.best <- coef(fit, s = lambda.best)
+coef.best
+
+```
+

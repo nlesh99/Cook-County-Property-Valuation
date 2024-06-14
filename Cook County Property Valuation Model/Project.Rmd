@@ -1,0 +1,236 @@
+---
+title: "Project"
+output: html_document
+date: "2023-11-24"
+---
+```{r}
+history <- read.csv("data/historic_property_data.csv")
+head(history)
+codebook <- read.csv("data/codebook.csv")
+head(codebook)
+predict <- read.csv("data/predict_property_data.csv")
+head(predict)
+```
+
+```{r}
+library(boot)
+```
+
+```{r}
+num_rows <- nrow(history)
+num_cols <- ncol(history)
+print(num_rows)
+print(num_cols)
+```
+
+```{r}
+#checking for duplicate rows
+duplicate_rows <- history[duplicated(history) | duplicated(history, fromLast = TRUE), ]
+print(duplicate_rows)
+```
+
+```{r}
+null_counts <- colSums(is.na(history))
+print(null_counts)
+
+
+```
+
+```{r}
+set.seed(3)
+cv_fun <- function(f) {
+  glmfit <- glm(f, data = history)
+  cv.glm(data = history, glmfit, K = 5)$delta[1]
+}
+
+formulas <- formula(list(all_variable_names))
+
+
+```
+```{r}
+set.seed(3)
+# Assuming var_list is a list of variable names
+var_list <- c('meta_class',	'meta_town_code',	'meta_nbhd',	'meta_certified_est_bldg',	'meta_certified_est_land')
+
+# Create an empty list to store the results
+cv_results <- list()
+
+formula_list <- list()
+
+# Iterate over each variable
+for (var_name in var_list) {
+  # Construct the formula dynamically
+  formula_str <- paste("sale_price ~", var_name)
+  formula_obj <- as.formula(formula_str)
+  
+  # Store the formula in the list
+  formula_list[[var_name]] <- formula_obj
+}
+
+# Now formula_list contains all the constructed formulas
+# Access and use the formulas as needed
+for (var_name in var_list) {
+  print(paste("Variable:", var_name, "Formula:", formula_list[[var_name]]))
+}
+```
+
+```{r}
+set.seed(3)
+glmfit <- glm(formula(sale_price ~ meta_class), data = history)
+cv.glm(data = history, glmfit, K = 5)$delta[1]
+```
+```{r}
+formulas <- formulas[all_variable_names != 'meta_cdu']
+
+formulas <- formulas[formulas !='geo_property_city']
+
+formulas <- formulas[formulas !='geo_property_zip']
+
+```
+
+
+
+```{r}
+set.seed(3)
+cv_fun <- function(f) {
+  glmfit <- glm(f, data = history)
+  cv.glm(data = history, glmfit, K = 5)$delta[1]
+}
+
+```
+
+
+```{r}
+set.seed(3)
+forward_cv <- vector("numeric", 5)
+forward_formulas <- vector(mode = "list", 5)
+```
+
+
+```{r}
+forward_cv[1] <- cv_fun(formula_obj)
+forward_formulas[[1]] <- formula_obj
+
+# M1: consider all 1-variable models
+M_formulas <- list(formula_obj)
+cv <- sapply(M_formulas, cv_fun)
+forward_cv[2] <- min(cv) # Store smallest MSE for M1
+forward_formulas[[2]] <- M_formulas[[which.min(cv)]] # Store best model for M1
+forward_formulas[[2]]
+
+
+
+```
+
+```{r}
+formula_obj
+```
+
+
+
+```{r}
+f0_1 <- formula(sale_price ~ meta_class)
+forward_cv[1]
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+timing_result <- system.time({
+  
+set.seed(3)
+# Assuming var_list is a list of variable names
+var_list <- formulas
+# Create an empty list to store the results
+cv_results <- list()
+
+# Iterate over each variable
+for (var_name in var_list) {
+  # Construct the formula dynamically
+  formula_str <- paste("sale_price ~", var_name)
+  formula_obj <- as.formula(formula_str)
+  
+  # Fit the model
+  glmfit <- glm(formula_obj, data = history)
+  
+  # Perform cross-validation and store the results
+  cv_result <- cv.glm(data = history, glmfit, K = 5)$delta[1]
+  cv_results[[var_name]] <- cv_result
+}
+
+# Access the results for each variable
+for (var_name in var_list) {
+  print(paste("Variable:", var_name, "CV Result:", cv_results[[var_name]]))
+}
+
+
+})
+
+# Print the timing result
+print(timing_result)
+
+```
+```{r}
+class(history$char_apts)
+```
+
+```{r}
+levels(history$char_apts)
+```
+
+
+```{r}
+history$char_apts <- factor(history$char_apts)
+```
+
+
+```{r}
+install.packages(c("dplyr", "purrr"))
+library(dplyr)
+library(purrr)
+```
+
+
+```{r}
+history
+```
+
+```{r}
+typeof(history)
+```
+
+```{r}
+y <- history$sale_price
+```
+
+```{r}
+
+```
+
